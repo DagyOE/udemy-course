@@ -3,11 +3,11 @@ package sk.games.puzzle;
 import java.io.*;
 import java.util.*;
 
-public class BestTimes implements Iterable<BestTimes.PlayerTime>, Serializable{
+public class BestTimes implements Iterable<BestTimes.PlayerTime>{
 
     private static final String BESTTIME_DB = System.getProperty("user.home")
             + System.getProperty("file.separator")
-            + "best_time_db.db";
+            + "best.time";
 
     private List<PlayerTime> playerTimes = new ArrayList<>();
 
@@ -18,53 +18,43 @@ public class BestTimes implements Iterable<BestTimes.PlayerTime>, Serializable{
     public void addTime(String name, int time){
         playerTimes.add(new PlayerTime(name, time));
         Collections.sort(playerTimes);
-        this.save();
     }
 
-    public void load() {
-        FileInputStream fis = null;
+    public void load(){
+        ObjectInputStream load = null;
         try {
-            fis = new FileInputStream(BESTTIME_DB);
+            load = new ObjectInputStream(new FileInputStream(BESTTIME_DB));
+            playerTimes = (ArrayList<PlayerTime>) load.readObject();
         } catch (FileNotFoundException e) {
-            System.err.println("Fail db neexistuje");
+            System.err.println("fail nebola najdena db");
+        } catch (IOException e) {
+            System.err.println("fail nebola otvorena db");
+        } catch (ClassNotFoundException e) {
+            System.err.println("fail nebol najdeny zaznam");
         } finally {
-            if (fis != null) {
-                ObjectInputStream ois = null;
+            if (load != null) {
                 try {
-                    ois = new ObjectInputStream(fis);
-                    if (ois != null) {
-                        try {
-                            playerTimes = (ArrayList<PlayerTime>) ois.readObject();
-                        } catch (ClassNotFoundException e) {
-                            System.err.println("Fail nebola najdena trieda");
-                        }
-                    } else {
-                    }
-                    assert ois != null;
-                    ois.close();
-                    } catch (IOException e) {
-                    System.err.println("Fail nepodarilo sa otvoril db");
+                    load.close();
+                } catch (IOException e) {
+                    //empty
                 }
             }
         }
     }
 
     public void save() {
-        FileOutputStream fos = null;
+        ObjectOutputStream save = null;
         try {
-            fos = new FileOutputStream(BESTTIME_DB);
+            save = new ObjectOutputStream(new FileOutputStream(BESTTIME_DB));
+            save.writeObject(playerTimes);
         } catch (FileNotFoundException e) {
-            System.err.println("Fail db neexistuje");
+            System.err.println("fail db neexistuje");
+        } catch (IOException e) {
+            System.err.println("fail nepodarilo sa otvorit db");
         } finally {
-            if (fos != null) {
-                ObjectOutputStream oos = null;
-                try{
-                    oos = new ObjectOutputStream(fos);
-                    if (oos != null) {
-                        oos.writeObject(playerTimes);
-                    }
-                    assert oos != null;
-                    oos.close();
+            if (save != null) {
+                try {
+                    save.close();
                 } catch (IOException e) {
                     //empty
                 }
@@ -82,7 +72,7 @@ public class BestTimes implements Iterable<BestTimes.PlayerTime>, Serializable{
         return f.toString();
     }
 
-    public static class PlayerTime implements Comparable<PlayerTime> {
+    public static class PlayerTime implements Comparable<PlayerTime>, Serializable {
 
         private final String name;
         private final int time;

@@ -1,8 +1,4 @@
 package sk.games.puzzle.core;
-
-import sk.games.puzzle.ui.ConsoleUI;
-
-import java.lang.reflect.Array;
 import java.util.Random;
 
 public class Field {
